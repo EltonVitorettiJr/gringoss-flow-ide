@@ -1,0 +1,43 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+// RN01 e RN02: Expediente e pausas
+model BusinessRule {
+  id         String   @id @default(uuid())
+  dayOfWeek  Int      // 1 = Segunda, 2 = Terça ... 6 = Sábado
+  openTime   String   // "07:00"
+  closeTime  String   // "19:00"
+  breakStart String?  // "12:00" (Nulo para sábado)
+  breakEnd   String?  // "14:00"
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+}
+
+// RN03: Serviços da barbearia
+model Service {
+  id              String        @id @default(uuid())
+  name            String        // "Corte", "Barba", "Combo"
+  durationMinutes Int           // 20 ou 40
+  price           Decimal?      
+  appointments    Appointment[]
+  createdAt       DateTime      @default(now())
+  updatedAt       DateTime      @updatedAt
+}
+
+// Agendamentos dos clientes
+model Appointment {
+  id            String   @id @default(uuid())
+  customerName  String   
+  customerPhone String?
+  startTime     DateTime 
+  endTime       DateTime 
+  serviceId     String
+  service       Service  @relation(fields: [serviceId], references: [id])
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+}

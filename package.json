@@ -1,0 +1,10 @@
+{
+  "devDependencies": {
+    "@biomejs/biome": "2.6.4"
+  },
+  "private": true,
+  "workspaces": [
+    "api",
+    "web"
+  ]
+}
