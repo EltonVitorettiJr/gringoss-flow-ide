@@ -1,18 +1,21 @@
-import Fastify from 'fastify'
+import Fastify from 'fastify';
+import { appRoutes } from './routes/index.js';
 
-const fastify = Fastify({
-  logger: true
-})
+const app = Fastify({ logger: { level: "info" } });
 
-// Declarando rota
-fastify.get('/', (_request, reply) => {
-  reply.send({ hello: 'world' })
-})
+// Registrando as rotas no Fastify com um prefixo global
+app.register(appRoutes, { prefix: '/api/v1' });
 
-// Rodando o servidor
-fastify.listen({ port: 3000 }, (err, _address) => {
-  if (err) {
-    fastify.log.error(err)
-    process.exit(1)
+const start = async () => {
+  try {
+    await app.listen({ port: 3000 });
+
+    console.log('🚀 Servidor rodando na porta 3000!');
+  } catch (err) {
+    app.log.error(err);
+
+    process.exit(1);
   }
-})
+};
+
+start();
