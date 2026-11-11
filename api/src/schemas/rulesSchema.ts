@@ -1,31 +1,26 @@
 import { z } from 'zod';
 
-const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-5][0-9a-f]{3}-[089ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
+// Regex que aceita estritamente o formato HH:MM (00:00 a 23:59)
 const timeRegex = /^([01]\d|2[0-3]):([0-5]\d)$/;
-const timeMessage = 'O formato deve ser HH:MM (ex: 07:00, 14:30).';
 
-const parseTime = (val: string) => new Date(`1970-01-01T${val}:00.000Z`);
+// Validador customizado: testa a string e depois converte seguro
+const timeStringSchema = z.string().trim().regex(timeRegex, 'Formato de hora inválido. Use HH:MM.')
+  .transform(val => new Date(`1970-01-01T${val}:00.000Z`));
 
 export const createRuleSchema = z.object({
-  dayOfWeek: z.number().min(0).max(6, 'O dia da semana deve ser entre 0 (Domingo) e 6 (Sábado).'),
-  openTime: z.string().regex(timeRegex, timeMessage).transform(parseTime),
-  closeTime: z.string().regex(timeRegex, timeMessage).transform(parseTime),
-  breakStart: z.string().regex(timeRegex, timeMessage).optional().transform((val) => val ? parseTime(val) : undefined),
-  breakEnd: z.string().regex(timeRegex, timeMessage).optional().transform((val) => val ? parseTime(val) : undefined),
+  dayOfWeek: z.number().int('O dia deve ser inteiro.').min(0).max(6, 'O dia da semana deve ser entre 0 (Domingo) e 6 (Sábado).'),
+  openTime: timeStringSchema,
+  closeTime: timeStringSchema,
+  breakStart: timeStringSchema.optional(),
+  breakEnd: timeStringSchema.optional(),
+});
+
+export const editRuleBodySchema = createRuleSchema.partial();
+
+export const editRuleParamsSchema = z.object({
+  id: z.uuid('ID da regra inválido.'),
 });
 
 export const deleteRuleSchema = z.object({
-  id: z.string().regex(uuidRegex, 'ID da regra inválido.'),
-});
-
-export const editRuleParamsSchema = z.object({
-  id: z.string().regex(uuidRegex, 'ID da regra inválido.'),
-});
-
-export const editRuleBodySchema = z.object({
-  dayOfWeek: z.number().min(0).max(6).optional(),
-  openTime: z.string().regex(timeRegex, timeMessage).optional().transform((val) => val ? parseTime(val) : undefined),
-  closeTime: z.string().regex(timeRegex, timeMessage).optional().transform((val) => val ? parseTime(val) : undefined),
-  breakStart: z.string().regex(timeRegex, timeMessage).optional().transform((val) => val ? parseTime(val) : undefined),
-  breakEnd: z.string().regex(timeRegex, timeMessage).optional().transform((val) => val ? parseTime(val) : undefined),
+  id: z.uuid('ID da regra inválido.'),
 });
