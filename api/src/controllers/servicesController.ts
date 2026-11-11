@@ -1,6 +1,7 @@
 import type { FastifyReply, FastifyRequest } from "fastify";
 import { z } from "zod";
 import { prisma } from "../lib/prisma.js";
+import { Prisma } from "../prisma/index.js";
 import {
   createServiceSchema,
   deleteServiceSchema,
@@ -63,8 +64,17 @@ export class ServiceController {
 
       return reply.status(204).send();
     } catch (error) {
+      // Interceptação de Erros Conhecidos do Prisma
+      if (error instanceof Prisma.PrismaClientKnownRequestError) {
+        if (error.code === 'P2003') {
+          return reply.status(409).send({
+            error: 'Conflito de integridade. Este serviço não pode ser excluído pois existem agendamentos vinculados a ele.'
+          });
+        }
+      }
+
       request.log.error(error);
-      return reply.status(500).send({ error: 'Erro ao cancelar serviço.' });
+      return reply.status(500).send({ error: 'Erro interno ao cancelar serviço.' });
     }
   }
 

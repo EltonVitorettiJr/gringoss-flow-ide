@@ -11,6 +11,22 @@ import { createServiceSchema, editServiceBodySchema, editServiceParamsSchema } f
 export const appRoutes = async (fastify: FastifyInstance) => {
   const app = fastify.withTypeProvider<ZodTypeProvider>();
 
+  app.addHook('onRequest', async (request, reply) => {
+    // GET continua público para listar horários.
+    const protectedMethods = ['POST', 'PUT', 'DELETE'];
+
+    if (protectedMethods.includes(request.method)) {
+      const apiKey = request.headers['x-api-key'];
+      const validKey = process.env.API_KEY;
+
+      if (!apiKey || apiKey !== validKey) {
+        return reply.status(401).send({
+          error: 'Acesso negado. Chave de API inválida ou ausente.'
+        });
+      }
+    }
+  });
+
   // Instanciando os controllers
   const rulesController = new RulesController();
   const serviceController = new ServiceController();

@@ -20,8 +20,18 @@ app.register(swagger, {
       description: 'Documentação do MVP da barbearia para o Front-end.',
       version: '1.0.0',
     },
+    components: {
+      securitySchemes: {
+        apiKey: {
+          type: 'apiKey',
+          name: 'x-api-key',
+          in: 'header',
+        },
+      },
+    },
+    security: [{ apiKey: [] }],
   },
-  transform: jsonSchemaTransform, // ESSA LINHA é a ponte crítica para o Zod
+  transform: jsonSchemaTransform,
 });
 
 // 3. Configura a página web da documentação
