@@ -4,8 +4,8 @@ Siga os passos abaixo para rodar a API em sua máquina local.
 
 1.  **Clone o repositório:**
     ```sh
-    git clone [https://github.com/EltonVitorettiJr/api-barbearia-gringoss.git](https://github.com/EltonVitorettiJr/api-barbearia-gringoss.git)
-    cd api-barbearia-gringoss
+    git clone [https://github.com/EltonVitorettiJr/gringoss-flow-ide.git](https://github.com/EltonVitorettiJr/gringoss-flow-ide.git)
+    cd api
     ```
 
 2.  **Instale as dependências:**
@@ -17,10 +17,11 @@ Siga os passos abaixo para rodar a API em sua máquina local.
     Crie um arquivo `.env` na raiz do projeto com as suas credenciais do PostgreSQL. Se estiver usando o Docker padrão do projeto, a URL será algo como:
     ```env
     DATABASE_URL="postgresql://docker:docker@localhost:5432/gringoss?schema=public"
+    API_KEY="gringoss_flow_ide_2026"
     ```
 
 4.  **Suba o Banco de Dados com Docker:**
-    Inicie o container do PostgreSQL em segundo plano. Certifique-se de que o Docker Desktop (ou daemon) esteja rodando.
+    Inicie o container do PostgreSQL em segundo plano. Certifique-se de que o Docker Desktop esteja rodando.
     ```sh
     docker-compose up -d
     ```
