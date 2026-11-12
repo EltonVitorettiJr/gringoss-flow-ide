@@ -4,7 +4,7 @@ Siga os passos abaixo para rodar a API em sua máquina local.
 
 1.  **Clone o repositório:**
     ```sh
-    git clone [https://github.com/EltonVitorettiJr/gringoss-flow-ide.git](https://github.com/EltonVitorettiJr/gringoss-flow-ide.git)
+    git clone https://github.com/EltonVitorettiJr/gringoss-flow-ide
     cd api
     ```
 
