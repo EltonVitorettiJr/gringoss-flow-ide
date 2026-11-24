@@ -9,6 +9,7 @@ import {
   editAppointmentParamsSchema,
   listAppointmentsSchema
 } from '../schemas/appointmentsSchema.js';
+import { AppointmentConflictError, isSerializationError } from '../utils/transactionErrors.js';
 
 type ListAppointmentsQuery = z.infer<typeof listAppointmentsSchema>;
 type CreateAppointmentBody = z.infer<typeof createAppointmentSchema>;
@@ -62,45 +63,43 @@ export class AppointmentsController {
       const startDateTime = data.startTime;
       const endDateTime = new Date(startDateTime.getTime() + service.durationMinutes * 60000);
 
-      const newAppointment = await prisma.$transaction(async (tx) => {
-        // 1. Checa a disponibilidade já dentro do contexto da transação
-        const conflictingAppointment = await tx.appointment.findFirst({
-          where: {
-            OR: [
-              {
-                startTime: { lt: endDateTime },
-                endTime: { gt: startDateTime },
-              },
-            ],
-          },
-        });
+      const newAppointment = await prisma.$transaction(
+        async (tx) => {
+          await tx.$executeRaw`SELECT pg_advisory_xact_lock(202601::bigint)`;
 
-        // 2. Se encontrar conflito, disparamos um erro para forçar o ROLLBACK do banco
-        if (conflictingAppointment) {
-          throw new Error('CONFLICT');
+          const conflictingAppointment = await tx.appointment.findFirst({
+            where: {
+              startTime: { lt: endDateTime },
+              endTime: { gt: startDateTime },
+            },
+          });
+
+          if (conflictingAppointment) {
+            throw new AppointmentConflictError();
+          }
+
+          return await tx.appointment.create({
+            data: {
+              customerName: data.customerName,
+              customerPhone: data.customerPhone,
+              startTime: startDateTime,
+              endTime: endDateTime,
+              serviceId: data.serviceId,
+            },
+            include: { service: true },
+          });
+        },
+        {
+          isolationLevel: Prisma.TransactionIsolationLevel.ReadCommitted,
+          maxWait: 10000,
+          timeout: 15000,
         }
-
-        // 3. Se estiver livre, cria o agendamento de forma segura
-        return await tx.appointment.create({
-          data: {
-            customerName: data.customerName,
-            customerPhone: data.customerPhone,
-            startTime: startDateTime,
-            endTime: endDateTime,
-            serviceId: data.serviceId,
-          },
-          include: { service: true },
-        });
-      }, {
-        isolationLevel: Prisma.TransactionIsolationLevel.Serializable,
-      });
+      );
 
       return reply.status(201).send(newAppointment);
-
-    } catch (error: any) {
-      // Intercepta o rollback do prisma
-      if (error.message === 'CONFLICT') {
-        return reply.status(409).send({ error: 'Horário indisponível. Já existe um agendamento neste período.' });
+    } catch (error: unknown) {
+      if (error instanceof AppointmentConflictError) {
+        return reply.status(409).send({ error: error.message });
       }
 
       request.log.error(error);

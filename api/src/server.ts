@@ -40,7 +40,11 @@ app.register(swaggerUi, {
 });
 
 // 4. Middlewares de infraestrutura
-app.register(cors, { origin: true });
+app.register(cors, {
+  origin: true,
+  methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'],
+  allowedHeaders: ['Content-Type', 'x-api-key'],
+});
 app.register(rateLimit, { max: 100, timeWindow: '1 minute' });
 
 // 5. REGISTRA AS ROTAS POR ÚLTIMO
